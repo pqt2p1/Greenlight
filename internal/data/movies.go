@@ -145,13 +145,14 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 	query := `
 		SELECT id, created_at, title, year, runtime, genres, version
 		FROM movies
+		WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
+		AND (genres @> $2 OR $2 = '{}')
 		ORDER BY id
 	`
-
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	rows, err := m.DB.QueryContext(ctx, query, title, pq.Array(genres))
 	if err != nil {
 		return nil, err
 	}
@@ -173,16 +174,15 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 			&movie.Version,
 		)
 
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
-		
+
 		movies = append(movies, &movie)
 	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
-
 	return movies, nil
 }
