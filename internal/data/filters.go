@@ -7,13 +7,21 @@ import (
 )
 
 type Filters struct {
-	Page     int
-	PageSize int
-	Sort     string
+	Page         int
+	PageSize     int
+	Sort         string
 	SortSafelist []string
 }
 
-func (f *Filters) sortColumn() string {
+func (f Filters) limit() int {
+	return f.PageSize
+}
+
+func (f Filters) offset() int {
+	return (f.Page - 1) * f.PageSize
+}
+
+func (f Filters) sortColumn() string {
 	for _, safeValue := range f.SortSafelist {
 		if f.Sort == safeValue {
 			return strings.TrimPrefix(f.Sort, "-")
@@ -23,8 +31,8 @@ func (f *Filters) sortColumn() string {
 	panic("unsafe sort parameter: " + f.Sort)
 }
 
-func (f *Filters) sortDirection() string {
-	if strings.HasPrefix(f.Sort, "-"){
+func (f Filters) sortDirection() string {
+	if strings.HasPrefix(f.Sort, "-") {
 		return "DESC"
 	}
 
@@ -38,4 +46,3 @@ func ValidateFilters(v *validator.Validator, f Filters) {
 	v.Check(f.PageSize <= 100, "page_size", "must be a maximum of 100")
 	v.Check(validator.PermittedValue(f.Sort, f.SortSafelist...), "sort", "invalid sort value")
 }
-
