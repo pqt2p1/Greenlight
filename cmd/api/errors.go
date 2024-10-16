@@ -7,7 +7,10 @@ import (
 
 // We will update more of this in future ( include r in logger ) but first just keep it this simple
 func (app *application) logError(r *http.Request, err error) { // print error (server side)
-	app.logger.Print(err)
+	app.logger.PrintError(err, map[string]string{
+		"request_method": r.Method,
+		"request_url":    r.URL.String(),
+	})
 }
 
 // print error server,  return wrap json to client
