@@ -4,9 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
-	"log"
-	"net/http"
 	"os"
 	"time"
 
@@ -28,8 +25,8 @@ type config struct {
 		maxIdieTime  string
 	}
 	limiter struct {
-		rps float64
-		burst int
+		rps     float64
+		burst   int
 		enabled bool
 	}
 }
@@ -71,22 +68,10 @@ func main() {
 		models: data.NewModels(db),
 	}
 
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      app.routes(),
-		IdleTimeout:  time.Minute,
-		ErrorLog: log.New(logger, "", 0),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+	err = app.serve()
+	if err != nil {
+		logger.PrintFatal(err, nil)
 	}
-
-	logger.PrintInfo("starting %s server on %s", map[string]string{
-		"addr": srv.Addr,
-		"env":  cfg.env,
-	})
-
-	err = srv.ListenAndServe()
-	logger.PrintFatal(err, nil)
 }
 
 func openDB(cfg config) (*sql.DB, error) {
