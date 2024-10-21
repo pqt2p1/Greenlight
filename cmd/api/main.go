@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"os"
+	"sync"
 	"time"
 
 	// "_" for stop Go compiler complaining package isn't being used
@@ -31,11 +32,11 @@ type config struct {
 		enabled bool
 	}
 	smtp struct {
-		host string
-		port int 
+		host     string
+		port     int
 		username string
 		password string
-		sender string
+		sender   string
 	}
 }
 
@@ -43,7 +44,8 @@ type application struct {
 	config config
 	logger *jsonlog.Logger
 	models data.Models
-	mailer mailer.Mailer 
+	mailer mailer.Mailer
+	wg     sync.WaitGroup
 }
 
 func main() {
