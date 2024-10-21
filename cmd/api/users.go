@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/pqt2p1/Greenlight/internal/data"
@@ -52,6 +53,12 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				app.logger.PrintError(fmt.Errorf("%s", err), nil)
+			}
+		}()
+
 		err = app.mailer.Send(user.Email, "user_welcome.html", user)
 		if err != nil {
 			app.logger.PrintError(err, nil)
