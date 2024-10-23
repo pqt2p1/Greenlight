@@ -52,6 +52,12 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	err = app.models.Permissions.AddForUser(user.ID, "movies:read")
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopeActivation)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -82,7 +88,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	err := app.readJSON(w, r, &input)
-	if err != nil{
+	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
@@ -91,7 +97,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 
 	if data.ValidateTokenPlaintext(v, input.TokenPlaintext); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
-		return 
+		return
 	}
 
 	user, err := app.models.Users.GetForToken(data.ScopeActivation, input.TokenPlaintext)
@@ -99,7 +105,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
 			v.AddError("token", "invalid or expired activation token")
-			app.failedValidationResponse(w, r,  v.Errors)
+			app.failedValidationResponse(w, r, v.Errors)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
@@ -116,18 +122,17 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
-		return 
+		return
 	}
 
 	err = app.models.Tokens.DeleteAllForUser(data.ScopeActivation, user.ID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
-		return 
+		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"user":user}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
-
