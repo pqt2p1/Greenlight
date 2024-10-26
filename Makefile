@@ -1,6 +1,10 @@
 # Include variables from the .envrc file
 include .envrc
 
+# =================================================================================== #
+# HELPERS #
+# =================================================================================== #
+
 ## help: print this help message
 .PHONY: help
 help:
@@ -10,6 +14,10 @@ help:
 .PHONY: confirm
 confirm:
 	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
+
+# =================================================================================== #
+# DEVELOPMENT #
+# =================================================================================== #
 
 ## run/api: run the cmd/api application
 .PHONY: run/api
@@ -32,3 +40,26 @@ db/migration/new:
 db/migrations/up: confirm
 	@echo 'Running up migrations...'
 	migrate -path ./migrations -database ${GREENLIGHT_DB_DSN} up
+
+# =================================================================================== #
+# QUALITY CONTROL #
+# =================================================================================== #
+.PHONY: audit
+audit:
+	staticcheck -checks='-U1000' ./...
+
+	@echo 'Tidying and verifying module dependencies...'
+	go mod tidy             # Clean up and check dependencies
+	go mod verify           # Verify the integrity of dependencies
+
+	@echo 'Formatting code...'
+	go fmt ./...            # Format all source code
+
+	@echo 'Vetting code...'
+	go vet ./...            # Static code analysis to detect potential issues
+	staticcheck ./...       # Advanced static analysis with staticcheck
+
+	@echo 'Running tests...'
+	CGO_ENABLED=1 go test -race -vet=off ./...  # Run tests with race detection enabled, skipping go vet
+
+

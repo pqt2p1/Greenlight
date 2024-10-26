@@ -29,6 +29,7 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 	})
 }
 
+//lint:ignore U1000 This function is reserved for future use
 func (app *application) rateLimitGlobal(next http.Handler) http.Handler {
 	limiter := rate.NewLimiter(2, 4)
 
@@ -120,7 +121,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		v := validator.New()
 
 		if data.ValidateTokenPlaintext(v, token); !v.Valid() {
-			app.invalidCredentialsResponse(w, r)
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
@@ -128,7 +129,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
-				app.invalidCredentialsResponse(w, r)
+				app.invalidAuthenticationTokenResponse(w, r)
 			default:
 				app.serverErrorResponse(w, r, err)
 			}

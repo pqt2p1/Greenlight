@@ -13,7 +13,7 @@ import (
 
 var (
 	ErrDuplicateEmail = errors.New("duplicate email")
-	AnonymousUser = &User{}
+	AnonymousUser     = &User{}
 )
 
 type User struct {
@@ -215,7 +215,7 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 			return nil, err
 		}
 	}
-	
+
 	return &user, nil
 }
 

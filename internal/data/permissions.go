@@ -43,7 +43,7 @@ func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 	defer rows.Close()
 
 	var permissions Permissions
-	
+
 	for rows.Next() {
 		var permission string
 		err := rows.Scan(&permission)
